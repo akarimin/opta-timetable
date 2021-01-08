@@ -1,8 +1,8 @@
 package com.paradigm.timetable.domain;
 
 /**
- * Because no Room instances change during solving, a Room is called a problem fact.
- * Such classes do not require any OptaPlanner specific annotations.
+ * Because no Room instances change during solving, a Deal is called a problem fact.
+ * Such Underwriters do not require any OptaPlanner specific annotations.
  */
 public class Deal {
 

@@ -6,16 +6,16 @@ import org.optaplanner.core.api.domain.variable.PlanningVariable;
 import java.time.Duration;
 
 /**
- * During solving, OptaPlanner changes the timeslot and room fields of the Lesson class, to assign
- * each lesson to a time slot and a room. Because OptaPlanner changes these fields,
- * Lesson is a planning entity.
+ * During solving, OptaPlanner changes the timeslot and deal fields of the Underwriter class, to assign
+ * each Underwriter to a time slot and a deal. Because OptaPlanner changes these fields,
+ * Underwriter is a planning entity.
  * <p>
- * The Lesson class has an @PlanningEntity annotation, so OptaPlanner knows that this class changes during
+ * The Underwriter class has an @PlanningEntity annotation, so OptaPlanner knows that this class changes during
  * solving because it contains one or more planning variables.
  * <p>
- * Of each Lesson:
- * The values of the timeslot and room fields are typically still null, so unassigned. They are planning variables.
- * The other fields, such as subject, teacher and studentGroup, are filled in. These fields are problem properties.
+ * Of each Underwriter:
+ * The values of the timeslot and deal fields are typically still null, so unassigned. They are planning variables.
+ * The other fields, such as groupId are filled in. These fields are problem properties.
  */
 @PlanningEntity
 public class Underwriter {
