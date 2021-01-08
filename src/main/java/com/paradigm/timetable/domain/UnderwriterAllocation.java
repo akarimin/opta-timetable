@@ -11,7 +11,7 @@ import java.io.Serializable;
 import java.util.List;
 
 @PlanningSolution
-public class TimeTable implements Serializable {
+public class UnderwriterAllocation implements Serializable {
 
     // problem facts
     @ValueRangeProvider(id = "timeSlotRange")
@@ -19,38 +19,38 @@ public class TimeTable implements Serializable {
     private List<Timeslot> timeslotList;
 
     // problem facts
-    @ValueRangeProvider(id = "roomRange")
+    @ValueRangeProvider(id = "dealRange")
     @ProblemFactCollectionProperty
-    private List<Room> roomList;
+    private List<Deal> dealList;
 
     // planning entities, because they change during solving.
     // also the output of the solution
     @PlanningEntityCollectionProperty
-    private List<Lesson> lessonList;
+    private List<Underwriter> underwriterList;
 
     // the other output of the solution
     @PlanningScore
     private HardSoftScore score;
 
-    public TimeTable() {
+    public UnderwriterAllocation() {
     }
 
-    public TimeTable(List<Timeslot> timeslotList, List<Room> roomList, List<Lesson> lessonList) {
+    public UnderwriterAllocation(List<Timeslot> timeslotList, List<Deal> dealList, List<Underwriter> underwriterList) {
         this.timeslotList = timeslotList;
-        this.roomList = roomList;
-        this.lessonList = lessonList;
+        this.dealList = dealList;
+        this.underwriterList = underwriterList;
     }
 
     public List<Timeslot> getTimeslotList() {
         return timeslotList;
     }
 
-    public List<Room> getRoomList() {
-        return roomList;
+    public List<Deal> getDealList() {
+        return dealList;
     }
 
-    public List<Lesson> getLessonList() {
-        return lessonList;
+    public List<Underwriter> getUnderwriterList() {
+        return underwriterList;
     }
 
     public HardSoftScore getScore() {
@@ -61,8 +61,8 @@ public class TimeTable implements Serializable {
     public String toString() {
         return "TimeTable{" +
             "timeslotList=" + timeslotList +
-            ", roomList=" + roomList +
-            ", lessonList=" + lessonList +
+            ", dealList=" + dealList +
+            ", underwriterList=" + underwriterList +
             ", score=" + score +
             '}';
     }
