@@ -22,10 +22,6 @@ public class Underwriter {
 
     private Long id;
     // not-null when uninitialized
-    private String subject;
-    // not-null when uninitialized
-    private String teacher;
-    // not-null when uninitialized
     private String groupId;
     // null when uninitialized - needs to be assigned at the end of solution
     @PlanningVariable(valueRangeProviderRefs = "timeSlotRange")
