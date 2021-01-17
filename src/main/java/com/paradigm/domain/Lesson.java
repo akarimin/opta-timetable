@@ -1,7 +1,15 @@
-package com.paradigm.timetable.domain;
+package com.paradigm.domain;
 
+
+import io.quarkus.hibernate.orm.panache.PanacheEntityBase;
 import org.optaplanner.core.api.domain.entity.PlanningEntity;
 import org.optaplanner.core.api.domain.variable.PlanningVariable;
+
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.ManyToOne;
 
 /**
  * During solving, OptaPlanner changes the timeslot and room fields of the Lesson class, to assign
@@ -15,28 +23,38 @@ import org.optaplanner.core.api.domain.variable.PlanningVariable;
  * The values of the timeslot and room fields are typically still null, so unassigned. They are planning variables.
  * The other fields, such as subject, teacher and studentGroup, are filled in. These fields are problem properties.
  */
-@PlanningEntity
-public class Lesson {
 
+@Entity
+@PlanningEntity
+public class Lesson extends PanacheEntityBase {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
     // not-null when uninitialized
-    private String subject;
+    private String subject;         // Math, French, ...
     // not-null when uninitialized
-    private String teacher;
+    private String teacher;         // A. Turing
     // not-null when uninitialized
-    private String studentGroup;
+    private String studentGroup;    // The 9th Grade
+
+    // --> Changes during planning
     // null when uninitialized - needs to be assigned at the end of solution
+    // Multiple Lessons will be held in one timeslot and HOPEFULLY not in a same room
+    @ManyToOne
     @PlanningVariable(valueRangeProviderRefs = "timeSlotRange")
     private Timeslot timeslot;
+    // --> Changes during planning
     // null when uninitialized - needs to be assigned at the end of solution
+    // Multiple Lessons will be held in one room and HOPEFULLY not in a same timeSlot
+    @ManyToOne
     @PlanningVariable(valueRangeProviderRefs = "roomRange")
     private Room room;
 
     public Lesson() {
     }
 
-    public Lesson(Long id, String subject, String teacher, String studentGroup) {
-        this.id = id;
+    public Lesson(String subject, String teacher, String studentGroup) {
         this.subject = subject;
         this.teacher = teacher;
         this.studentGroup = studentGroup;
@@ -44,6 +62,11 @@ public class Lesson {
 
     public Long getId() {
         return id;
+    }
+
+    public Lesson setId(Long id) {
+        this.id = id;
+        return this;
     }
 
     public String getSubject() {
@@ -62,13 +85,13 @@ public class Lesson {
         return timeslot;
     }
 
+    public Room getRoom() {
+        return room;
+    }
+
     public Lesson setTimeslot(Timeslot timeslot) {
         this.timeslot = timeslot;
         return this;
-    }
-
-    public Room getRoom() {
-        return room;
     }
 
     public Lesson setRoom(Room room) {
