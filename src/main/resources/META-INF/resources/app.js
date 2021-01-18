@@ -2,118 +2,104 @@ var autoRefreshCount = 0;
 var autoRefreshIntervalId = null;
 
 function refreshTimeTable() {
-    $.getJSON("/timeTable", function (timeTable) {
-        refreshSolvingButtons(timeTable.solverStatus != null && timeTable.solverStatus !== "NOT_SOLVING");
-        $("#score").text("Score: "+ (timeTable.score == null ? "?" : timeTable.score));
+    $.getJSON("/timeTable", function (prioritizedNewDealsQueue) {
+        refreshSolvingButtons(prioritizedNewDealsQueue.solverStatus != null && prioritizedNewDealsQueue.solverStatus !== "NOT_SOLVING");
+        $("#score").text(""+ (prioritizedNewDealsQueue.score == null ? "" : prioritizedNewDealsQueue.score));
 
-        const timeTableByRoom = $("#timeTableByRoom");
-        timeTableByRoom.children().remove();
-        const timeTableByTeacher = $("#timeTableByTeacher");
-        timeTableByTeacher.children().remove();
-        const timeTableByStudentGroup = $("#timeTableByStudentGroup");
-        timeTableByStudentGroup.children().remove();
-        const unassignedLessons = $("#unassignedLessons");
-        unassignedLessons.children().remove();
+        const timeTableByQueueGroup = $("#timeTableByQueueGroup");
+        timeTableByQueueGroup.children().remove();
+        const timeTableByBroker = $("#timeTableByBroker");
+        timeTableByBroker.children().remove();
+        const timeTableByBrand = $("#timeTableByBrand");
+        timeTableByBrand.children().remove();
+        const unassignedDeals = $("#unassignedDeals");
+        unassignedDeals.children().remove();
 
-        const theadByRoom = $("<thead>").appendTo(timeTableByRoom);
-        const headerRowByRoom = $("<tr>").appendTo(theadByRoom);
-        headerRowByRoom.append($("<th>Timeslot</th>"));
-        $.each(timeTable.roomList, (index, room) => {
-            headerRowByRoom
+        const theadByQueueGroup = $("<thead>").appendTo(timeTableByQueueGroup);
+        const headerRowByQueueGroup = $("<tr>").appendTo(theadByQueueGroup);
+        headerRowByQueueGroup.append($("<th>Priority</th>"));
+        $.each(prioritizedNewDealsQueue.queueGroupList, (index, group) => {
+            headerRowByQueueGroup
             .append($("<th/>")
-                .append($("<span/>").text(room.name))
+                .append($("<span/>").text(group.name))
                 .append($(`<button type="button" class="ml-2 mb-1 btn btn-light btn-sm p-1"/>`)
-                        .append($(`<small class="fas fa-trash"/>`)
-                        ).click(() => deleteRoom(room))));
+                        .append($(`<small class="fas fa-trash"/>`))
+                    .click(() => deleteQueueGroup(group))));
         });
-        const theadByTeacher = $("<thead>").appendTo(timeTableByTeacher);
-        const headerRowByTeacher = $("<tr>").appendTo(theadByTeacher);
-        headerRowByTeacher.append($("<th>Timeslot</th>"));
-        const teacherList = [...new Set(timeTable.lessonList.map(lesson => lesson.teacher))];
-        $.each(teacherList, (index, teacher) => {
-            headerRowByTeacher
+        const theadByBroker = $("<thead>").appendTo(timeTableByBroker);
+        const headerRowByBroker = $("<tr>").appendTo(theadByBroker);
+        headerRowByBroker.append($("<th>Priority</th>"));
+        const brokerList = [...new Set(prioritizedNewDealsQueue.dealList.map(deal => deal.broker))];
+        $.each(brokerList, (index, broker) => {
+            headerRowByBroker
             .append($("<th/>")
-                .append($("<span/>").text(teacher)));
+                .append($("<span/>").text(broker)));
         });
-        const theadByStudentGroup = $("<thead>").appendTo(timeTableByStudentGroup);
-        const headerRowByStudentGroup = $("<tr>").appendTo(theadByStudentGroup);
-        headerRowByStudentGroup.append($("<th>Timeslot</th>"));
-        const studentGroupList = [...new Set(timeTable.lessonList.map(lesson => lesson.studentGroup))];
-        $.each(studentGroupList, (index, studentGroup) => {
-            headerRowByStudentGroup
+        const theadByBrand = $("<thead>").appendTo(timeTableByBrand);
+        const headerRowByBrand = $("<tr>").appendTo(theadByBrand);
+        headerRowByBrand.append($("<th>Priority</th>"));
+        const brandList = [...new Set(prioritizedNewDealsQueue.dealList.map(deal => deal.brand))];
+        $.each(brandList, (index, brand) => {
+            headerRowByBrand
             .append($("<th/>")
-                .append($("<span/>").text(studentGroup)));
+                .append($("<span/>").text(brand)));
         });
 
-        const tbodyByRoom = $("<tbody>").appendTo(timeTableByRoom);
-        const tbodyByTeacher = $("<tbody>").appendTo(timeTableByTeacher);
-        const tbodyByStudentGroup = $("<tbody>").appendTo(timeTableByStudentGroup);
-        $.each(timeTable.timeslotList, (index, timeslot) => {
-            const rowByRoom = $("<tr>").appendTo(tbodyByRoom);
-            rowByRoom
-            .append($(`<th class="align-middle"/>`)
-                .append($("<span/>").text(`
-                    ${timeslot.dayOfWeek.charAt(0) + timeslot.dayOfWeek.slice(1).toLowerCase()}
-                    ${moment(timeslot.startTime, "HH:mm:ss").format("HH:mm")}
-                    -
-                    ${moment(timeslot.endTime, "HH:mm:ss").format("HH:mm")}
-                `)
-                .append($(`<button type="button" class="ml-2 mb-1 btn btn-light btn-sm p-1"/>`)
-                        .append($(`<small class="fas fa-trash"/>`)
-                        ).click(() => deleteTimeslot(timeslot)))));
+        const tbodyByQueueGroup = $("<tbody>").appendTo(timeTableByQueueGroup);
+        const tbodyByBroker = $("<tbody>").appendTo(timeTableByBroker);
+        const tbodyByBrand = $("<tbody>").appendTo(timeTableByBrand);
+        $.each(prioritizedNewDealsQueue.priorityList, (index, p) => {
+            const rowByQueueGroup = $("<tr>").appendTo(tbodyByQueueGroup);
+            rowByQueueGroup
+                .append($(`<th class="align-middle"/>`)
+                    .append($("<span/>").text(`P: ${p.priority}`)
+                        .append($(`<button type="button" class="ml-2 mb-1 btn btn-light btn-sm p-1"/>`)
+                            .append($(`<small class="fas fa-trash"/>`))
+                    .click(() => deleteSLA(p)))));
 
-            const rowByTeacher = $("<tr>").appendTo(tbodyByTeacher);
-            rowByTeacher
-            .append($(`<th class="align-middle"/>`)
-                .append($("<span/>").text(`
-                    ${timeslot.dayOfWeek.charAt(0) + timeslot.dayOfWeek.slice(1).toLowerCase()}
-                    ${moment(timeslot.startTime, "HH:mm:ss").format("HH:mm")}
-                    -
-                    ${moment(timeslot.endTime, "HH:mm:ss").format("HH:mm")}
-                `)));
-            $.each(timeTable.roomList, (index, room) => {
-                rowByRoom.append($("<td/>").prop("id", `timeslot${timeslot.id}room${room.id}`));
+            const rowByBroker = $("<tr>").appendTo(tbodyByBroker);
+            rowByBroker
+                .append($(`<th class="align-middle"/>`)
+                    .append($("<span/>").text(`P: ${p.priority}`)));
+            $.each(prioritizedNewDealsQueue.queueGroupList, (index, queueGroup) => {
+                rowByQueueGroup.append($("<td/>").prop("id", `p${p.id}queueGroup${queueGroup.id}`));
             });
-            const rowByStudentGroup = $("<tr>").appendTo(tbodyByStudentGroup);
-            rowByStudentGroup
-            .append($(`<th class="align-middle"/>`)
-                .append($("<span/>").text(`
-                    ${timeslot.dayOfWeek.charAt(0) + timeslot.dayOfWeek.slice(1).toLowerCase()}
-                    ${moment(timeslot.startTime, "HH:mm:ss").format("HH:mm")}
-                    -
-                    ${moment(timeslot.endTime, "HH:mm:ss").format("HH:mm")}
-                `)));
+            const rowByBrand = $("<tr>").appendTo(tbodyByBrand);
+            rowByBrand
+                .append($(`<th class="align-middle"/>`)
+                    .append($("<span/>").text(`P: ${p.priority}`)));
 
-            $.each(teacherList, (index, teacher) => {
-                rowByTeacher.append($("<td/>").prop("id", `timeslot${timeslot.id}teacher${convertToId(teacher)}`));
+            $.each(brokerList, (index, broker) => {
+                rowByBroker.append($("<td/>").prop("id", `p${p.id}broker${convertToId(broker)}`));
             });
 
-            $.each(studentGroupList, (index, studentGroup) => {
-                rowByStudentGroup.append($("<td/>").prop("id", `timeslot${timeslot.id}studentGroup${convertToId(studentGroup)}`));
+            $.each(brandList, (index, brand) => {
+                rowByBrand.append($("<td/>").prop("id", `p${p.id}brand${convertToId(brand)}`));
             });
         });
 
-        $.each(timeTable.lessonList, (index, lesson) => {
-            const color = pickColor(lesson.subject);
+        $.each(prioritizedNewDealsQueue.dealList, (index, deal) => {
+            const color = pickColor(deal.dealId);
             const lessonElementWithoutDelete = $(`<div class="card lesson" style="background-color: ${color}"/>`)
                     .append($(`<div class="card-body p-2"/>`)
-                            .append($(`<h5 class="card-title mb-1"/>`).text(lesson.subject))
-                            .append($(`<p class="card-text ml-2 mb-1"/>`)
-                                    .append($(`<em/>`).text(`by ${lesson.teacher}`)))
-                            .append($(`<small class="ml-2 mt-1 card-text text-muted align-bottom float-right"/>`).text(lesson.id))
-                            .append($(`<p class="card-text ml-2"/>`).text(lesson.studentGroup)));
+                    .append($(`<h5 class="card-title mb-1"/>`).text(`Deal: ${deal.id}`))
+                    .append($(`<h7 class="card-title mb-1"/>`).text(`SLA: ${deal.expectedSLA/3600}`))
+                    .append($(`<p class="card-text ml-2 mb-1"/>`)
+                    .append($(`<em/>`).text(`Broker: ${deal.broker}`)))
+                    .append($(`<small class="ml-2 mt-1 card-text text-muted align-bottom float-right"/>`).text(`deal-id: ${deal.dealId}`))
+                    .append($(`<p class="card-text ml-2"/>`).text(`Brand: ${deal.brand}`)));
             const lessonElement = lessonElementWithoutDelete.clone();
             lessonElement.find(".card-body").prepend(
                 $(`<button type="button" class="ml-2 btn btn-light btn-sm p-1 float-right"/>`)
-                        .append($(`<small class="fas fa-trash"/>`)
-                        ).click(() => deleteLesson(lesson))
+                        .append($(`<small class="fas fa-trash"/>`))
+                    .click(() => deleteDeal(deal))
             );
-            if (lesson.timeslot == null || lesson.room == null) {
-                unassignedLessons.append(lessonElement);
+            if (deal.priority == null || deal.queueGroup == null) {
+                unassignedDeals.append(lessonElement);
             } else {
-                $(`#timeslot${lesson.timeslot.id}room${lesson.room.id}`).append(lessonElement);
-                $(`#timeslot${lesson.timeslot.id}teacher${convertToId(lesson.teacher)}`).append(lessonElementWithoutDelete.clone());
-                $(`#timeslot${lesson.timeslot.id}studentGroup${convertToId(lesson.studentGroup)}`).append(lessonElementWithoutDelete.clone());
+                $(`#p${deal.priority.id}queueGroup${deal.queueGroup.id}`).append(lessonElement);
+                $(`#p${deal.priority.id}broker${convertToId(deal.broker)}`).append(lessonElementWithoutDelete.clone());
+                $(`#p${deal.priority.id}brand${convertToId(deal.brand)}`).append(lessonElementWithoutDelete.clone());
             }
         });
     });
@@ -144,6 +130,7 @@ function refreshSolvingButtons(solving) {
         $("#solveButton").show();
         $("#stopSolvingButton").hide();
     }
+    refreshTimeTable();
 }
 
 function autoRefresh() {
@@ -164,66 +151,64 @@ function stopSolving() {
     });
 }
 
-function addLesson() {
-    var subject = $("#lesson_subject").val().trim();
-    $.post("/lessons", JSON.stringify({
-        "subject": subject,
-        "teacher": $("#lesson_teacher").val().trim(),
-        "studentGroup": $("#lesson_studentGroup").val().trim()
+function addDeal() {
+    var dealId = $("#deal_dealId").val().trim();
+    $.post("/deals", JSON.stringify({
+        "dealId": dealId,
+        "broker": $("#deal_broker").val().trim(),
+        "brand": $("#deal_brand").val().trim()
     }), function () {
         refreshTimeTable();
     }).fail(function(xhr, ajaxOptions, thrownError) {
-        showError("Adding lesson (" + subject + ") failed.", xhr);
+        showError("Adding deal (" + dealId + ") failed.", xhr);
     });
     $('#lessonDialog').modal('toggle');
 }
 
-function deleteLesson(lesson) {
-    $.delete("/lessons/" + lesson.id, function () {
+function deleteDeal(deal) {
+    $.delete("/deals/" + deal.id, function () {
         refreshTimeTable();
     }).fail(function(xhr, ajaxOptions, thrownError) {
-        showError("Deleting lesson (" + lesson.name + ") failed.", xhr);
+        showError("Deleting deal (" + deal.name + ") failed.", xhr);
     });
 }
 
-function addTimeslot() {
-    $.post("/timeslots", JSON.stringify({
-        "dayOfWeek": $("#timeslot_dayOfWeek").val().trim().toUpperCase(),
-        "startTime": $("#timeslot_startTime").val().trim(),
-        "endTime": $("#timeslot_endTime").val().trim()
+function addSLA() {
+    $.post("/slas", JSON.stringify({
+        "expectedSLA": $("#expectedSLA_expectedSLA"),
     }), function () {
         refreshTimeTable();
     }).fail(function(xhr, ajaxOptions, thrownError) {
-        showError("Adding timeslot failed.", xhr);
+        showError("Adding SLA failed.", xhr);
     });
     $('#timeslotDialog').modal('toggle');
 }
 
-function deleteTimeslot(timeslot) {
-    $.delete("/timeslots/" + timeslot.id, function () {
+function deleteSLA(sla) {
+    $.delete("/slas/" + sla.id, function () {
         refreshTimeTable();
     }).fail(function(xhr, ajaxOptions, thrownError) {
-        showError("Deleting timeslot (" + timeslot.name + ") failed.", xhr);
+        showError("Deleting SLA (" + sla.id + ") failed.", xhr);
     });
 }
 
-function addRoom() {
-    var name = $("#room_name").val().trim();
-    $.post("/rooms", JSON.stringify({
+function addQueueGroup() {
+    var name = $("#queueGroup_name").val().trim();
+    $.post("/queue-groups", JSON.stringify({
         "name": name
     }), function () {
         refreshTimeTable();
     }).fail(function(xhr, ajaxOptions, thrownError) {
-        showError("Adding room (" + name + ") failed.", xhr);
+        showError("Adding Queue Group (" + name + ") failed.", xhr);
     });
     $("#roomDialog").modal('toggle');
 }
 
-function deleteRoom(room) {
-    $.delete("/rooms/" + room.id, function () {
+function deleteQueueGroup(queueGroup) {
+    $.delete("/queue-groups/" + queueGroup.id, function () {
         refreshTimeTable();
     }).fail(function(xhr, ajaxOptions, thrownError) {
-        showError("Deleting room (" + room.name + ") failed.", xhr);
+        showError("Deleting Queue Group (" + queueGroup.name + ") failed.", xhr);
     });
 }
 
@@ -284,13 +269,13 @@ $(document).ready( function() {
         stopSolving();
     });
     $("#addLessonSubmitButton").click(function() {
-        addLesson();
+        addDeal();
     });
     $("#addTimeslotSubmitButton").click(function() {
-        addTimeslot();
+        addSLA();
     });
     $("#addRoomSubmitButton").click(function() {
-        addRoom();
+        addQueueGroup();
     });
 
     refreshTimeTable();

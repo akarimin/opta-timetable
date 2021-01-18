@@ -10,6 +10,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.ManyToOne;
+import java.time.Duration;
 
 /**
  * During solving, OptaPlanner changes the timeslot and room fields of the Lesson class, to assign
@@ -26,81 +27,83 @@ import javax.persistence.ManyToOne;
 
 @Entity
 @PlanningEntity
-public class Lesson extends PanacheEntityBase {
+public class Deal extends PanacheEntityBase {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
     // not-null when uninitialized
-    private String subject;         // Math, French, ...
+    private String dealId;
     // not-null when uninitialized
-    private String teacher;         // A. Turing
+    private String broker;
     // not-null when uninitialized
-    private String studentGroup;    // The 9th Grade
+    private String brand;
+    // not-null when uninitialized
+    private Duration expectedSLA;
 
     // --> Changes during planning
     // null when uninitialized - needs to be assigned at the end of solution
     // Multiple Lessons will be held in one timeslot and HOPEFULLY not in a same room
     @ManyToOne
-    @PlanningVariable(valueRangeProviderRefs = "timeSlotRange")
-    private Timeslot timeslot;
+    @PlanningVariable(valueRangeProviderRefs = "priorityRange")
+    private Priority priority;
     // --> Changes during planning
     // null when uninitialized - needs to be assigned at the end of solution
     // Multiple Lessons will be held in one room and HOPEFULLY not in a same timeSlot
     @ManyToOne
-    @PlanningVariable(valueRangeProviderRefs = "roomRange")
-    private Room room;
+    @PlanningVariable(valueRangeProviderRefs = "queueGroupRange")
+    private QueueGroup queueGroup;
 
-    public Lesson() {
+    public Deal() {
     }
 
-    public Lesson(String subject, String teacher, String studentGroup) {
-        this.subject = subject;
-        this.teacher = teacher;
-        this.studentGroup = studentGroup;
+    public Deal(String dealId, String broker, String brand, Duration expectedSLA) {
+        this.dealId = dealId;
+        this.broker = broker;
+        this.brand = brand;
+        this.expectedSLA = expectedSLA;
     }
 
     public Long getId() {
         return id;
     }
 
-    public Lesson setId(Long id) {
+    public Deal setId(Long id) {
         this.id = id;
         return this;
     }
 
-    public String getSubject() {
-        return subject;
+    public String getDealId() {
+        return dealId;
     }
 
-    public String getTeacher() {
-        return teacher;
+    public String getBroker() {
+        return broker;
     }
 
-    public String getStudentGroup() {
-        return studentGroup;
+    public String getBrand() {
+        return brand;
     }
 
-    public Timeslot getTimeslot() {
-        return timeslot;
+    public Priority getPriority() {
+        return priority;
     }
 
-    public Room getRoom() {
-        return room;
+    public Duration getExpectedSLA() {
+        return expectedSLA;
     }
 
-    public Lesson setTimeslot(Timeslot timeslot) {
-        this.timeslot = timeslot;
+    public QueueGroup getQueueGroup() {
+        return queueGroup;
+    }
+
+    public Deal setPriority(Priority priority) {
+        this.priority = priority;
         return this;
     }
 
-    public Lesson setRoom(Room room) {
-        this.room = room;
+    public Deal setQueueGroup(QueueGroup queueGroup) {
+        this.queueGroup = queueGroup;
         return this;
-    }
-
-    @Override
-    public String toString() {
-        return  subject + "(" + id + ")";
     }
 }

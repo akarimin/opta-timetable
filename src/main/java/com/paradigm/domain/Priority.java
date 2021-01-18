@@ -8,41 +8,42 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 
 /**
- * Because no Room instances change during solving, a Room is called a problem fact.
+ * Because no Timeslot instances change during solving, a Timeslot is called a problem fact.
  * Such classes do not require any OptaPlanner specific annotations.
  */
 @Entity
-public class Room extends PanacheEntityBase {
+public class Priority extends PanacheEntityBase {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
-    private String name;
+    private Long priority;
 
-    public Room() {
+    public Priority() {
     }
 
-    public Room(String name) {
-        this.name = name;
+    public Priority(Long priority) {
+        this.priority = priority;
     }
 
     public Long getId() {
         return id;
     }
 
-    public Room setId(Long id) {
+    public Priority setId(Long id) {
         this.id = id;
         return this;
     }
 
-    public String getName() {
-        return name;
+    public Long getPriority() {
+        return priority;
     }
 
     @Override
     public String toString() {
-        return "Room{" +
-            "name='" + name + '\'' +
+        return "Priority{" +
+            "id=" + id +
+            ", priority=" + priority +
             '}';
     }
 }
